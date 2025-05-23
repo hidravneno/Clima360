@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1 class="mb-4">Consulta el clima de tu ciudad</h1>
+
+<form id="weatherForm">
+  <input type="text" id="cityInput" placeholder="Ingrese una ciudad" required>
+  <button type="submit">Buscar clima</button>
+</form>
+
+<div id="weatherResult" style="display: none;">
+  <h2 id="cityName"></h2>
+  <p>Temperatura: <span id="temp"></span> °C</p>
+  <p>Humedad: <span id="humidity"></span> %</p>
+  <p>Descripción: <span id="description"></span></p>
+  <img id="weatherIcon" src="" alt="Icono del clima" />
+</div>
+
+<!-- Pronóstico extendido -->
+<div class="container mt-5">
+  <h2>Pronóstico Extendido</h2>
+  <canvas id="forecastChart"></canvas>
+</div>
+
+<script>
+document.getElementById('weatherForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const city = document.getElementById('cityInput').value;
+
+  fetch(`/api/weather/current?city=${city}`)
+    .then(response => response.json())
+    .then(data => {
+      if (data.temperature && data.description) {
+        document.getElementById('cityName').textContent = data.city;
+        document.getElementById('temp').textContent = data.temperature;
+        document.getElementById('humidity').textContent = data.humidity;
+        document.getElementById('description').textContent = data.description;
+        document.getElementById('weatherIcon').src = `https://openweathermap.org/img/wn/${data.icon}@2x.png`;
+        document.getElementById('weatherResult').style.display = 'block';
+
+        obtenerPronosticoExtendido(data.city);
+      } else if (data.error) {
+        alert(data.error);
+        document.getElementById('weatherResult').style.display = 'none';
+      } else {
+        alert('No se encontraron datos para esa ciudad');
+        document.getElementById('weatherResult').style.display = 'none';
+      }
+    })
+    .catch(err => {
+      console.error('Error al consultar:', err);
+      alert('Error al consultar el clima');
+    });
+});
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+function obtenerPronosticoExtendido(ciudad) {
+  fetch(`/api/weather/forecast?city=${encodeURIComponent(ciudad)}`)
+    .then(response => response.json())
+    .then(data => {
+      const labels = [];
+      const temps = [];
+
+      for (let i = 0; i < data.list.length; i += 8) {
+        const punto = data.list[i];
+        const fecha = new Date(punto.dt * 1000);
+        labels.push(fecha.toLocaleDateString());
+        temps.push(punto.main.temp);
+      }
+
+      const ctx = document.getElementById('forecastChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Temperatura (°C)',
+            data: temps,
+            fill: false,
+            borderColor: 'blue',
+            tension: 0.1
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: true }
+          },
+          scales: {
+            y: { beginAtZero: false }
+          }
+        }
+      });
+    })
+    .catch(error => {
+      console.error("Error obteniendo pronóstico:", error);
+    });
+}
+</script>
+
+{% endblock %}
