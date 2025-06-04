@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Historial de Búsquedas de Clima</h2>
+
+{% if history %}
+  <ul class="list-group mt-4">
+    {% for item in history %}
+      <li class="list-group-item">
+        <strong>{{ item.city }}</strong> -
+        {{ item.temperature }}°C,
+        {{ item.humidity }}% humedad,
+        {{ item.description }},
+        buscado el {{ item.searched_at|date:"d M Y H:i" }}
+      </li>
+    {% endfor %}
+  </ul>
+{% else %}
+  <p>No tienes búsquedas registradas aún.</p>
+{% endif %}
+{% endblock %}
