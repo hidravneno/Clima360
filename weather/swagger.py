@@ -3,6 +3,7 @@ from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 from django.urls import path
 
+# Swagger configuration para Clima360 API documentation, sirve para generar la documentación interactiva de la API usando drf-yasg
 schema_view = get_schema_view(
     openapi.Info(
         title="Clima360 API",

@@ -9,7 +9,12 @@ from django.contrib.auth.decorators import login_required
 from .models import SearchHistory
 from .forms import CustomUserCreationForm
 from django.contrib.auth import login
+from .permissions import IsOwnerOrReadOnly
+from .serializers import SearchHistorySerializer
+from rest_framework import generics
 
+
+permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
 
 #Base html para inicio 
 def home(request):
@@ -17,8 +22,7 @@ def home(request):
 
 #Para saber el clima actualmente
 class CurrentWeatherView(APIView):
-    permission_classes = [IsAuthenticatedOrReadOnly]
-
+    permission_classes = [IsAuthenticatedOrReadOnly]# Permite acceso a usuarios autenticados o no autenticados los no autenticados solo pueden ver el clima actual y sin historial
     def get(self, request):
         lat = request.GET.get('lat')
         lon = request.GET.get('lon')
@@ -130,7 +134,8 @@ class WeatherAlertsView(APIView):
         lon = request.GET.get('lon')
         API_KEY = config('OPENWEATHER_API_KEY')
 
-
+        # Verifica que se hayan proporcionado las coordenadas
+        # Si no se proporcionan, devuelve un error 400
         if not lat or not lon:
             return Response({"error": "Se requieren lat y lon"}, status=400)
 
@@ -140,16 +145,15 @@ class WeatherAlertsView(APIView):
         alerts = data.get("alerts", [])
         return Response({"alerts": alerts})
 
-# Para ver el historial de busquedas de los usuarios
-class SearchHistoryView(APIView):
-    permission_classes = [IsAuthenticated]
+# Para ver el historial de busquedas de los usuarios, usa isOwnerOrReadOnly para que los usuarios solo puedan ver su propio historial
+class SearchHistoryDetailView(generics.RetrieveUpdateDestroyAPIView): 
+    queryset = SearchHistory.objects.all()
+    serializer_class = SearchHistorySerializer
+    permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
 
-    # Obtiene el historial de búsqueda del usuario autenticado
-    # y lo devuelve como una lista de diccionarios con la ciudad y la fecha de búsqueda
-    def get(self, request):
-        history = SearchHistory.objects.filter(user=request.user).order_by('-searched_at')
-        data = [{"city": h.city, "searched_at": h.searched_at} for h in history]
-        return Response(data)
+    def get_queryset(self):
+        # Limita el acceso solo al historial del usuario autenticado
+        return self.queryset.filter(user=self.request.user)
 
 # Registro de usuarios
 def register(request):

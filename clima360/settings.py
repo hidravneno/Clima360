@@ -19,13 +19,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-_r21gd^h!&@8x$oup_s14crxw$f7p)rp$r@(%6+1h(3afx0cn8'
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
 ALLOWED_HOSTS = []
 
 OPENWEATHER_API_KEY = config('OPENWEATHER_API_KEY')
@@ -33,6 +26,14 @@ OPENWEATHER_API_KEY = config('OPENWEATHER_API_KEY')
 LOGIN_REDIRECT_URL = '/'  # Redirige al inicio después de iniciar sesión
 LOGOUT_REDIRECT_URL = '/accounts/login/'  # Después de cerrar sesión
 
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+}
+
+SECRET_KEY = config('SECRET_KEY')
+DEBUG = config('DEBUG', cast=bool)
 
 # Application definition
 
@@ -113,7 +114,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'es'
 
 TIME_ZONE = 'UTC'
 
