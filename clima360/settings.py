@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'weather',
     'drf_yasg',
     'django_extensions',
+    'widget_tweaks'
 ]
 
 MIDDLEWARE = [
